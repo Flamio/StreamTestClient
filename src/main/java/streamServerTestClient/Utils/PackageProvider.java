@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import streamServerTestClient.Models.CheckParameters;
 
 @Component
-public class PackageBuilder implements IPackageBuilder {
+public class PackageProvider implements IPackageProvider {
 	
 	private byte[] buffer = null;
 
@@ -25,20 +25,22 @@ public class PackageBuilder implements IPackageBuilder {
 	}
 
 	public boolean check(CheckParameters parameters, byte[] data) {
+		ByteBuffer byteBuffer = ByteBuffer.wrap(data);
+		
+		if (data.length != byteBuffer.getInt(2))
+			return false;
+		
+		return true;
+	}
+
+	public boolean isRightHeader(byte[] data) {
 		if (data == null)
 			return false;
 		
 		if (data.length == 0)
 			return false;
 		
-		ByteBuffer byteBuffer = ByteBuffer.wrap(data);
-		if (byteBuffer.getShort() != (short) 0xcefa)
-			return false;
-		
-		if (data.length != byteBuffer.getInt(2))
-			return false;
-		
-		return true;
+		return ByteBuffer.wrap(data).getShort() == (short) 0xcefa;
 	}
 
 }
