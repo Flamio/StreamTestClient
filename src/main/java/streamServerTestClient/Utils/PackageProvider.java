@@ -1,6 +1,8 @@
 package streamServerTestClient.Utils;
 
 import java.nio.ByteBuffer;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import org.springframework.stereotype.Component;
 
@@ -10,16 +12,24 @@ import streamServerTestClient.Models.CheckParameters;
 public class PackageProvider implements IPackageProvider {
 	
 	private byte[] buffer = null;
+	private long counter = 0;
+	
+	private long previousCounter = 0;
 
 	public byte[] build(CheckParameters parameters) {
-
-		if (buffer != null && buffer.length == parameters.getMtu())
-			return buffer;
 		
 		buffer = new byte[parameters.getMtu()];
 		ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
 		byteBuffer.putShort((short)0xFACE);
 		byteBuffer.putInt(2,parameters.getMtu());
+		byteBuffer.putLong(6,counter);
+		counter++;
+		
+		Checksum crc = new CRC32();
+		crc.update(buffer, 2, buffer.length-6);
+		
+		int crc32 = (int)crc.getValue();		
+		byteBuffer.putInt(buffer.length - 4,crc32);
 		
 		return buffer;
 	}
@@ -30,6 +40,19 @@ public class PackageProvider implements IPackageProvider {
 		if (data.length != byteBuffer.getInt(2))
 			return false;
 		
+		Checksum crc = new CRC32();
+		crc.update(data, 2 ,data.length-6);
+		int crc32 = (int)crc.getValue();
+		int packetCrc = byteBuffer.getInt(data.length - 4);
+		if (crc32 != packetCrc)
+			return false;
+		
+		long counter = byteBuffer.getLong(6);
+		
+		if (previousCounter > counter && previousCounter !=0 && counter !=0)
+			return false;
+		
+		previousCounter = counter;
 		return true;
 	}
 

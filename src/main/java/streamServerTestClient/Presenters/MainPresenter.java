@@ -28,6 +28,7 @@ public class MainPresenter {
 	private volatile boolean isFinish;
 	private volatile int fps = 0;
 	private volatile int packetCouneter = 0;
+	private volatile int errors = 0;
 
 	private static void burn(long nanos) {
 		long deadline = System.nanoTime()+nanos;
@@ -70,7 +71,8 @@ public class MainPresenter {
 								continue;
 							packetCouneter++;
 							boolean isRightPacket = packageBuilder.check(checkParameters, receivedPacket);
-							
+							if (!isRightPacket)
+								errors++;
 						}
 					}
 				});
@@ -88,7 +90,7 @@ public class MainPresenter {
 							if (fps == 0)
 								mainView.setLogString("Нет подключения к серверу...");
 							else
-								mainView.setLogString(String.format("Подключено, fps=%d", fps));
+								mainView.setLogString(String.format("Подключено, fps = %d, errors = %d", fps, errors));
 							
 							packetCouneter=0;
 							

@@ -88,9 +88,15 @@ public class MainDialog extends JFrame implements IMainView {
 				}
 				else
 				{
+					int mtuValue = Integer.parseInt(mtu.getText());
+					if (mtuValue < 50)
+					{
+						setLogString("mtu должно быть больше 50");
+						return;
+					}
 					CheckParameters parameters = new CheckParameters();
 					parameters.setFps(Integer.parseInt(fps.getText()));
-					parameters.setMtu(Integer.parseInt(mtu.getText()));
+					parameters.setMtu(mtuValue);
 					parameters.setPort(Integer.parseInt(port.getText()));
 					parameters.setAddress(address.getText());
 					listener.startCheck(parameters);
