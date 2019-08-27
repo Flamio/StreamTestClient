@@ -19,7 +19,7 @@ public class App
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("main-context.xml");
 		MainPresenter presenter = context.getBean("mainPresenter", MainPresenter.class);
 		presenter.init();
 		context.close();
