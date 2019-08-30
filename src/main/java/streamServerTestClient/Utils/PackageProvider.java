@@ -14,7 +14,16 @@ public class PackageProvider implements IPackageProvider {
 	private byte[] buffer = null;
 	private long counter = 0;
 	
+	private int loosesPackets = 0;
+	
 	private long previousCounter = 0;
+	
+	public void cleanCheck()
+	{
+		counter = 0;
+		previousCounter = 0;
+		loosesPackets = 0;
+	}
 
 	public byte[] build(CheckParameters parameters) {
 		
@@ -49,11 +58,20 @@ public class PackageProvider implements IPackageProvider {
 		
 		long counter = byteBuffer.getLong(6);
 		
-		if (previousCounter > counter && previousCounter !=0 && counter !=0)
-			return false;
+		if (previousCounter +1 != counter && previousCounter !=0 && counter !=0)
+		{
+			loosesPackets += counter - previousCounter;
+			previousCounter = counter;
+			return true;
+		}
 		
 		previousCounter = counter;
+		
 		return true;
+	}
+
+	public int getLoosesPackets() {
+		return loosesPackets;
 	}
 
 	public boolean isRightHeader(byte[] data) {

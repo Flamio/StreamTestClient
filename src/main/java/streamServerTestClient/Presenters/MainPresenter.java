@@ -29,6 +29,7 @@ public class MainPresenter {
 	private volatile int fps = 0;
 	private volatile int packetCouneter = 0;
 	private volatile int errors = 0;
+	private volatile int loosesPackets = 0;
 
 	private static void burn(long nanos) {
 		long deadline = System.nanoTime()+nanos;
@@ -45,7 +46,12 @@ public class MainPresenter {
 					public void run() 
 					{
 						sendEngine.init();
+						errors = 0;
+						fps = 0;
+						packetCouneter = 0;
+						packageBuilder.cleanCheck();
 						isFinish = false;
+						mainView.setLogString("Начало проверки");
 						while (!isFinish)
 						{
 							byte[] packet = packageBuilder.build(checkParameters);
@@ -73,27 +79,37 @@ public class MainPresenter {
 							boolean isRightPacket = packageBuilder.check(checkParameters, receivedPacket);
 							if (!isRightPacket)
 								errors++;
+							loosesPackets = packageBuilder.getLoosesPackets();
 						}
 					}
 				});
 
 				listenThread.start();
-				
+
 				connectionWatchThread = new Thread(new Runnable() {
-					
+
 					public void run() {
 						isFinish = false;
+						try 
+						{
+							Thread.sleep(1000);
+						} 
+						catch (InterruptedException e1) {
+
+							e1.printStackTrace();
+						}
 						while (!isFinish)
 						{
 							fps = packetCouneter/2;
-							
+
 							if (fps == 0)
 								mainView.setLogString("Нет подключения к серверу...");
 							else
-								mainView.setLogString(String.format("Подключено, fps = %d, errors = %d", fps, errors));
-							
+								mainView.setLogString(String.format("Подключено, fps = %d, ошибки в пакетах = %d, кол-во потерянных пакетов = %d"
+										, fps, errors, loosesPackets));
+
 							packetCouneter=0;
-							
+
 							try {
 								Thread.sleep(2000);
 							} catch (InterruptedException e) {
@@ -102,13 +118,14 @@ public class MainPresenter {
 						}
 					}
 				});
-				
+
 				connectionWatchThread.start();
 			}
 
 			public void stop() {
 				isFinish = true;
 				sendEngine.stop();
+				mainView.setLogString("Стоп");
 			}
 		});
 
